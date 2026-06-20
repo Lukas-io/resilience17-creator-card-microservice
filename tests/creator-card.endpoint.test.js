@@ -148,6 +148,20 @@ describe('Creator Card — endpoints (integration)', function integration() {
     expect(r.data.updated).to.equal(created.data.updated);
   });
 
+  it('delete with a mismatched creator_reference -> NF01 (ownership, no existence leak)', async () => {
+    await post({
+      title: 'Owned Card',
+      slug: 'owned-card',
+      creator_reference: 'crt_owner00000000001',
+      status: 'published',
+    });
+    expect(
+      await errCode(del('owned-card', { creator_reference: 'crt_attacker0000001x' }))
+    ).to.equal('NF01');
+    const still = await get('owned-card');
+    expect(still.status).to.equal(200);
+  });
+
   it('TC7 — duplicate provided slug -> SL02', async () => {
     await post({
       title: 'George Cooks',

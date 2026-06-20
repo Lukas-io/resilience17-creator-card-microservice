@@ -42,7 +42,7 @@ Private cards take the pin as a query param: `GET /creator-cards/vip-rate-card?a
 
 ### `DELETE /creator-cards/:slug`
 
-Body: `{ "creator_reference": "<exactly 20 chars>" }`. Returns the deleted card in creation format with `deleted` set; the card is then no longer retrievable (`NF01`).
+Body: `{ "creator_reference": "<exactly 20 chars>" }`. The `creator_reference` must match the card's — a missing card *or* a mismatched reference both return `NF01` (so the endpoint never reveals whether a slug exists to a non-owner). Returns the deleted card in creation format with `deleted` set; the card is then no longer retrievable (`NF01`).
 
 ## Error codes
 
