@@ -15,4 +15,6 @@ module.exports = {
   INVALID_SERVICE_RATES: 'service_rates must include a currency and a non-empty rates array',
   RATES_REQUIRED: 'service_rates.rates must be a non-empty array when service_rates is present',
   INVALID_ACCESS_CODE_FORMAT: 'access_code must be exactly 6 alphanumeric characters',
+  IDEMPOTENCY_CONFLICT: 'Idempotency-Key was already used with a different request',
+  IDEMPOTENCY_IN_PROGRESS: 'A request with this Idempotency-Key is already in progress',
 };

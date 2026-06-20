@@ -26,6 +26,8 @@ const ERROR_CODE = {
   NF02: 'NF02',
   AC03: 'AC03',
   AC04: 'AC04',
+  IK01: 'IK01',
+  IK02: 'IK02',
 };
 
 const ERROR_STATUS_CODE_MAPPING = {
@@ -49,6 +51,8 @@ const ERROR_STATUS_CODE_MAPPING = {
   NF02: 404,
   AC03: 403,
   AC04: 403,
+  IK01: 409,
+  IK02: 409,
 };
 
 module.exports = { ERROR_CODE, ERROR_STATUS_CODE_MAPPING };
