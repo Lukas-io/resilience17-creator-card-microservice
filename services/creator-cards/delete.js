@@ -6,11 +6,11 @@ const { parsedDeleteSpec } = require('./validation');
 const { serializeCard } = require('./serializer');
 
 async function deleteCreatorCard({ slug, body }) {
-  validator.validate(body, parsedDeleteSpec);
+  const { creator_reference: creatorReference } = validator.validate(body, parsedDeleteSpec);
 
   const deletedAt = Date.now();
   const card = await creatorCardRepo.raw().findOneAndUpdate(
-    { slug, deleted: null },
+    { slug, creator_reference: creatorReference, deleted: null },
     { $set: { deleted: deletedAt } },
     {
       new: false,
