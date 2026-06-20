@@ -66,6 +66,16 @@ Every error response is uniform: `{ "status": "error", "message": "...", "code":
 - A thin in-service layer covers what VSL can't express (regex/integer): slug charset, URL scheme, `access_code` format, integer amounts, and null-container guards. All return 400.
 - Business rules (slug uniqueness, conditional `access_code`, retrieval access control) are implemented in the services and carry the custom codes above.
 
+## Idempotency
+
+`POST /creator-cards` accepts an optional `Idempotency-Key` header — the canonical safeguard against double-submits when a client retries on a flaky network.
+
+- Same key + same body → the **identical original response** (one card created).
+- Same key + a **different** body → **409** `IK01`.
+- Concurrent retries with the same key are **reserve-first**, so they can never double-create; an in-flight duplicate gets **409** `IK02`.
+- Keys are stored with a request fingerprint (`sha256`) and **expire after 24h** (Mongo TTL index).
+- No header → standard behaviour; the three required contracts are untouched.
+
 ## Core template edits
 
 The scaffold was changed in exactly **two files**, both minimal and additive, to satisfy the assessment's "all errors must return appropriate JSON responses with proper HTTP status codes":
