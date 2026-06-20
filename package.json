@@ -11,7 +11,7 @@
   "scripts": {
     "start": "node app.js",
     "test": "mocha \"tests/**/*.test.js\" --require dotenv/config --timeout 20000 --exit",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "commitlint": "commitlint --edit",
     "sync-envs": "node sync-env-files"
   },
