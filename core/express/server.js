@@ -246,7 +246,6 @@ function Server(serverConfig = {}) {
         responseComponents.body.message = error.isApplicationError
           ? error.message
           : 'Some error occured.';
-        // surface the business error code at the top level of the error envelope
         responseComponents.body.code = error.isApplicationError ? error.errorCode : undefined;
         responseComponents.body.errors = error.details || undefined;
         responseComponents.body.data = error.context;

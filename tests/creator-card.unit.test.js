@@ -2,7 +2,6 @@ const { expect } = require('chai');
 const { serializeCard, serializePublicCard } = require('../services/creator-cards/serializer');
 const { slugifyTitle, generateUniqueSlug } = require('../services/creator-cards/slug');
 
-// Pure logic we wrote that has real branching/edge cases — worth isolating from HTTP/DB.
 describe('Creator Card — unit', () => {
   describe('slug generation', () => {
     it('lowercases the title and hyphenates whitespace', () => {
@@ -24,8 +23,6 @@ describe('Creator Card — unit', () => {
     });
   });
 
-  // The serialization layer is the whole reason _id never leaks and access_code
-  // is shown on create/delete but hidden on retrieval — the core gotcha.
   describe('serializer', () => {
     const doc = {
       _id: '01ABC',
