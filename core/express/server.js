@@ -69,9 +69,9 @@ function Server(serverConfig = {}) {
   app.use(express.json({ limit: JSONLimit }), (err, req, res, next) => {
     if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
       res.status(400).json({
-        code: 'ERR',
-        error: true,
+        status: 'error',
         message: 'Error encountered in parsing request payload. Please check payload and try again',
+        code: 'ERR',
       });
     } else {
       next();
@@ -246,6 +246,8 @@ function Server(serverConfig = {}) {
         responseComponents.body.message = error.isApplicationError
           ? error.message
           : 'Some error occured.';
+        // surface the business error code at the top level of the error envelope
+        responseComponents.body.code = error.isApplicationError ? error.errorCode : undefined;
         responseComponents.body.errors = error.details || undefined;
         responseComponents.body.data = error.context;
 
@@ -279,6 +281,7 @@ function Server(serverConfig = {}) {
       res.status(404).json({
         status: 'error',
         message: 'Resource not found.',
+        code: 'RESOURCE_NOT_FOUND',
       });
     });
     app.use((err, _, res, __) => {
