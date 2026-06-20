@@ -75,15 +75,28 @@ The scaffold was changed in exactly **two files**, both minimal and additive, to
 
 No other core behavior was modified.
 
-## Setup
+## Local setup
 
 ```bash
 npm install
-cp .env.example .env   # set MONGODB_URI and PORT
-npm start              # node app.js  (Procfile: node bootstrap.js)
+cp .env.example .env     # set MONGODB_URI and PORT
+npm start                # node app.js   (Procfile uses: node bootstrap.js)
 ```
 
-Required env: `PORT`, `MONGODB_URI` (MongoDB Atlas or local).
+Required environment variables:
+
+| Variable | Required | Notes |
+|----------|----------|-------|
+| `PORT` | yes | Port to listen on (the host sets this in production) |
+| `MONGODB_URI` | yes | MongoDB connection string (Atlas or local) |
+| `NODE_ENV` | no | `production` in deployment |
+
+A local MongoDB via Docker is enough for development:
+
+```bash
+docker run -d --name cc-mongo -p 27017:27017 mongo:7
+# .env -> MONGODB_URI=mongodb://localhost:27017/creator_cards
+```
 
 ## Tests
 
@@ -92,11 +105,56 @@ npm test
 ```
 
 - **Unit** tests (no DB) cover validation, access-code rules, slug generation, and serialization.
-- **Integration** tests drive the real endpoint handlers against MongoDB (all 16 acceptance cases plus field injection, null containers, and create/delete concurrency). They self-skip if `MONGODB_URI` is not set.
+- **Integration** tests drive the real endpoint handlers against MongoDB (all 16 acceptance cases plus field injection, null containers, ownership, and create/delete concurrency). They self-skip if `MONGODB_URI` is not set.
 
 ## Deployment
 
-Deploy to Heroku/Render with `MONGODB_URI` set. The `Procfile` runs `node bootstrap.js`. Submit the **base URL only** — no versioning, no endpoint paths.
+Deployed on **Render** (web service) backed by **MongoDB Atlas**. The `Procfile` runs `node bootstrap.js`; endpoints live at the root of the base URL (no versioning, no auth).
+
+### 1. MongoDB Atlas
+
+1. Create a free **M0** cluster.
+2. Add a database user (least privilege — `readWrite` on the app database only) with a strong password.
+3. **Network access:** allowlist your host's outbound IPs. For Render, allowlist its regional egress ranges (Render dashboard → service → *Connect → Outbound*) rather than `0.0.0.0/0`, so the database is reachable only from the app.
+4. Build the connection string: `mongodb+srv://<user>:<password>@<cluster>/creator_cards?retryWrites=true&w=majority`.
+
+### 2. Render web service
+
+| Setting | Value |
+|---------|-------|
+| Environment | Node |
+| Build command | `npm install` |
+| Start command | `node bootstrap.js` |
+| Plan | Free |
+| Env vars | `MONGODB_URI`, `NODE_ENV=production` |
+
+Via the dashboard (New → Web Service → connect the repo) or the CLI:
+
+```bash
+render services create \
+  --name creator-card-api --type web_service \
+  --repo https://github.com/<owner>/<repo> --branch main \
+  --runtime node \
+  --build-command "npm install" \
+  --start-command "node bootstrap.js" \
+  --plan free \
+  --env-var "MONGODB_URI=<your-atlas-uri>" \
+  --env-var "NODE_ENV=production" --confirm
+```
+
+> Note: `package.json`'s `prepare` script is `husky || true` so production installs (which skip dev dependencies) don't fail when husky is absent.
+
+### 3. Verify
+
+After the deploy is live, exercise the endpoints against the base URL:
+
+```bash
+curl -X POST https://<your-app>.onrender.com/creator-cards \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"George Cooks","creator_reference":"crt_8f2k1m9x4p7w3q5z","status":"published"}'
+```
+
+Submit the **base URL only** — no versioning, no endpoint paths.
 
 ## Structure
 
