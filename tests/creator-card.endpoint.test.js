@@ -64,8 +64,6 @@ describe('Creator Card — endpoints', function endpoints() {
     }
   });
 
-  // Public card end-to-end: auto-slug, id-not-_id, public defaults, access_code hidden
-  // on retrieval, soft-delete returns creation shape with `updated` unchanged, then 404.
   it('public card lifecycle: create → retrieve → delete → gone', async () => {
     const created = await post({
       title: 'George Cooks',
@@ -96,7 +94,6 @@ describe('Creator Card — endpoints', function endpoints() {
     expect(await code(get('george-cooks'))).to.equal('NF01');
   });
 
-  // Private card: access_code echoed on create, omitted on retrieval even with the correct pin.
   it('private card: create echoes access_code, retrieval with pin omits it', async () => {
     const created = await post({
       title: 'VIP Rate Card',
@@ -112,7 +109,6 @@ describe('Creator Card — endpoints', function endpoints() {
     expect(got.data).to.not.have.property('access_code');
   });
 
-  // Business rule errors — one per distinct code.
   it('duplicate provided slug → SL02', async () => {
     await post({
       title: 'George',
@@ -185,8 +181,6 @@ describe('Creator Card — endpoints', function endpoints() {
     expect(await code(del('missing', { creator_reference: ref('x') }))).to.equal('NF01');
   });
 
-  // Ownership: the slug is public, so a non-matching creator_reference must not delete,
-  // and must not reveal that the card exists.
   it('delete with a mismatched creator_reference → NF01, card survives', async () => {
     await post({
       title: 'Owned',
@@ -198,7 +192,6 @@ describe('Creator Card — endpoints', function endpoints() {
     expect((await get('owned-card')).status).to.equal(200);
   });
 
-  // Framework validation and our extra (regex/integer) checks both return 400.
   it('invalid input → 400 (framework enum and custom amount check)', async () => {
     expect(
       await code(post({ title: 'Bad', creator_reference: ref('q'), status: 'archived' }))
@@ -218,7 +211,6 @@ describe('Creator Card — endpoints', function endpoints() {
     ).to.equal('VALIDATION_ERROR');
   });
 
-  // Gotcha (audit finding): a null nested container must yield a clean 400, not a raw TypeError.
   it('null service_rates → clean VALIDATION_ERROR, not a crash', async () => {
     expect(
       await code(
@@ -232,7 +224,6 @@ describe('Creator Card — endpoints', function endpoints() {
     ).to.equal('VALIDATION_ERROR');
   });
 
-  // Server-controlled fields can't be injected via the body.
   it('ignores injected _id / created / deleted', async () => {
     const r = await post({
       _id: 'EVIL',
@@ -248,7 +239,6 @@ describe('Creator Card — endpoints', function endpoints() {
     expect(r.data.deleted).to.equal(null);
   });
 
-  // Concurrency gotchas we fixed: slug auto-gen race and the delete race.
   it('concurrent same-title creates → all succeed with distinct slugs', async () => {
     const results = await Promise.all(
       Array.from({ length: 6 }, () =>
