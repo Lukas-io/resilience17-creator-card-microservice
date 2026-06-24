@@ -72,6 +72,16 @@ Two layers, each failure landing on **HTTP 400**:
 
 Business rules that need data access — slug uniqueness, the conditional `access_code` logic, and the retrieval access-control ordering — live in the services and carry the custom codes above.
 
+## Idempotency
+
+`POST /creator-cards` accepts an optional `Idempotency-Key` header — the canonical safeguard against double-submits when a client retries on a flaky network.
+
+- Same key + same body → the **identical original response** (one card created).
+- Same key + a **different** body → **409** `IK01`.
+- Concurrent retries with the same key are **reserve-first**, so they can never double-create; an in-flight duplicate gets **409** `IK02`.
+- Keys are stored with a request fingerprint (`sha256`) and **expire after 24h** (Mongo TTL index).
+- No header → standard behaviour; the three required contracts are untouched.
+
 ## Core template edits
 
 The scaffold was touched in exactly **two files**, both minimal and additive, to meet the brief's requirement that *all* errors return proper JSON with proper status codes:

@@ -11,6 +11,7 @@ const {
 } = require('./validation');
 const { generateUniqueSlug } = require('./slug');
 const { serializeCard } = require('./serializer');
+const { withIdempotency } = require('./idempotency');
 
 const MAX_CREATE_ATTEMPTS = 5;
 
@@ -19,7 +20,7 @@ async function isSlugTaken(slug) {
   return !!existing;
 }
 
-async function createCreatorCard(serviceData) {
+async function persistCreatorCard(serviceData) {
   assertNoNullContainers(serviceData);
 
   const data = validator.validate(serviceData, parsedCreateSpec);
@@ -63,6 +64,14 @@ async function createCreatorCard(serviceData) {
   }
 
   return throwAppError(CreatorCardMessages.SLUG_TAKEN, ERROR_CODE.SL02);
+}
+
+async function createCreatorCard(serviceData, options = {}) {
+  const { idempotencyKey } = options;
+  if (idempotencyKey) {
+    return withIdempotency(idempotencyKey, serviceData, () => persistCreatorCard(serviceData));
+  }
+  return persistCreatorCard(serviceData);
 }
 
 module.exports = createCreatorCard;

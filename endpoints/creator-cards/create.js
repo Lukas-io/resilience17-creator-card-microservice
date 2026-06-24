@@ -11,7 +11,9 @@ module.exports = createHandler({
     appLogger.info({ requestContext: rc, response: rs }, 'create-creator-card-completed');
   },
   async handler(rc, helpers) {
-    const data = await createCreatorCardService(rc.body);
+    const data = await createCreatorCardService(rc.body, {
+      idempotencyKey: rc.headers['idempotency-key'],
+    });
     return {
       status: helpers.http_statuses.HTTP_200_OK,
       message: CreatorCardMessages.CREATED,
